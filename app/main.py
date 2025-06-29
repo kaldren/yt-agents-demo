@@ -1,3 +1,4 @@
+from fastapi import FastAPI
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.contents import ChatHistory
@@ -10,7 +11,10 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 
-async def main():
+app = FastAPI()
+
+@app.get("/chat")
+async def root():
     kernel = KernelManager.create_kernel()
     chat_service = ChatService(kernel, system_prompt="You are a helpful assistant that only answers questions about Ryanair flights.")
 
@@ -23,6 +27,19 @@ async def main():
 
     print(f"Chat Completion Result: {result}")
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    chat_service.add_message_to_history(
+        role="assistant",
+        content=result
+    )
+
+    chat_service.add_message_to_history(
+        role="user",
+        content="Show me the whole conversation so far (including this one)."
+    )
+
+    result = await chat_service.get_chat_completion()
+    print(f"Chat History Result: {result}")
+
+    return {
+        "chat_completion": result,
+    }

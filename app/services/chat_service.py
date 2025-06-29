@@ -29,8 +29,10 @@ class ChatService:
     async def get_chat_completion(self) -> str:
         """Get chat completion based on the provided history."""
 
-        return await self._kernel_manager.chat_completion.get_chat_message_content(
+        result = await self._kernel_manager.chat_completion.get_chat_message_content(
             chat_history=self._chat_history,
             kernel=self._kernel_manager._kernel,
             settings=self._settings
         )
+
+        return result.content
