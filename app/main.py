@@ -3,28 +3,16 @@ from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 from semantic_kernel.contents import ChatHistory
 from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
 from semantic_kernel.connectors.ai import FunctionChoiceBehavior
+from services.chat_service import ChatService
+from services.kernel_manager import KernelManager
 from plugins.azure_ai_search import AzureAISearch
 from dotenv import load_dotenv
 import os
 load_dotenv()
 
 async def main():
-    kernel = Kernel()
-
-    # Add Service to the kernel
-    chat_completion = AzureChatCompletion(
-        deployment_name=os.getenv("AZURE_OPENAI_CHAT_MODEL_ID"),
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    )
-
-    kernel.add_service(chat_completion)
-    kernel.add_plugin(AzureAISearch(), plugin_name="AzureAISearch")
-
-    # Enable planning
-    execution_settings = AzureChatPromptExecutionSettings()
-    execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
-
+    kernel = KernelManager.create_kernel()
+    chat_service = ChatService(kernel)
 
     history = ChatHistory()
     # create dictionary with role and content
@@ -43,11 +31,7 @@ async def main():
 
     history.add_message(dict)
 
-    result = await chat_completion.get_chat_message_content(
-        chat_history=history,
-        kernel=kernel,
-        settings=execution_settings
-    )
+    result = await chat_service.get_chat_completion(history)
 
     print(f"Chat Completion Result: {result}")
 
