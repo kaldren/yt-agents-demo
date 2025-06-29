@@ -12,26 +12,14 @@ load_dotenv()
 
 async def main():
     kernel = KernelManager.create_kernel()
-    chat_service = ChatService(kernel)
+    chat_service = ChatService(kernel, system_prompt="You are a helpful assistant that only answers questions about Ryanair flights.")
 
-    history = ChatHistory()
-    # create dictionary with role and content
+    chat_service.add_message_to_history(
+        role="user",
+        content="Can I bring my AK47 on a Ryanair flight?"
+    )
 
-    # Add dictionary to chat history for system and user messages
-    dict = {
-        "role": "system",
-        "content": "Only answer questions about Ryanair flights. If you don't know the answer, say exactly 'I don't know'. DO NOT USE YOUR GENERAL KNOWLEDGE FOR ANY REASON!"
-    }
-    history.add_message(dict)
-
-    dict = {
-        "role": "user",
-        "content": "Can I bring my AK47 on a Ryanair flight?"
-    }
-
-    history.add_message(dict)
-
-    result = await chat_service.get_chat_completion(history)
+    result = await chat_service.get_chat_completion()
 
     print(f"Chat Completion Result: {result}")
 

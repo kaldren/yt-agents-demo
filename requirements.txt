@@ -1,3 +1,4 @@
 semantic-kernel[azure]
 azure-ai-projects 
 azure-search-documents
+fastapi[standard]
