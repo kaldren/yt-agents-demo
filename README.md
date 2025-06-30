@@ -115,7 +115,7 @@ az containerapp create \
     --target-port 8501 \
     --ingress external \
     --min-replicas 1 \
-    --max-replicas 10 \
+    --max-replicas 2 \
     --cpu 1.0 \
     --memory 2Gi
 ```
