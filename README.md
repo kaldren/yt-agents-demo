@@ -5,10 +5,26 @@ A chat application that answers questions about Ryanair flights using Azure AI S
 ## Project Structure
 
 - `app/` - FastAPI backend application
+  - `agents/` - Agent-based components
+    - `ryanair_agent.py` - Main Ryanair Q&A agent
+  - `services/` - Service layer
+    - `chat_service.py` - Chat service wrapper
+    - `kernel_manager.py` - Azure AI services manager
+  - `plugins/` - Semantic Kernel plugins
+    - `azure_ai_search.py` - Azure AI Search integration
 - `streamlit_app.py` - Streamlit frontend interface
 - `requirements.txt` - Python dependencies
 - `Dockerfile` - Container configuration
 - `deploy.sh` - Automated deployment script
+
+## Architecture
+
+This application uses an **agent-based architecture** where:
+
+- **RyanairAgent**: Core agent that handles all Q&A logic, maintains conversation state, and manages sessions
+- **ChatService**: Thin wrapper service that delegates to the agent
+- **KernelManager**: Manages Azure AI services and Semantic Kernel
+- **Streamlit Frontend**: User interface that communicates with the agent via FastAPI
 
 ## Setup
 
@@ -152,6 +168,7 @@ az containerapp update \
 
 ## Features
 
+- **Agent-Based Architecture**: Modular, maintainable code with clear separation of concerns
 - **Session Management**: Each chat session maintains its own history
 - **Persistent Chat History**: Chat history persists across application restarts
 - **Azure AI Integration**: Uses Azure OpenAI for chat completions
@@ -160,6 +177,7 @@ az containerapp update \
 - **Container Ready**: Dockerized for easy deployment
 - **Auto-scaling**: Scales based on HTTP traffic
 - **Health Monitoring**: Built-in health checks
+- **Agent Controls**: Reset conversations, view agent info, manage sessions
 
 ## API Endpoints
 
@@ -167,6 +185,20 @@ az containerapp update \
 - `POST /chat` - Send a message and get a response
 - `GET /chat/history` - Get chat history for a session
 - `GET /chat` - Test endpoint with sample conversation
+- `GET /agent/info` - Get information about the agent
+- `POST /agent/reset` - Reset conversation for a session
+- `GET /agent/sessions` - Get all active session IDs
+
+## Agent Capabilities
+
+The RyanairAgent provides:
+- **Flight Policy Queries**: Answer questions about Ryanair policies
+- **Baggage Information**: Provide baggage allowance details
+- **Check-in Procedures**: Explain check-in processes
+- **Service and Fee Information**: Share information about services and fees
+- **Document Search**: Use Azure AI Search to find relevant documentation
+- **Conversation Management**: Maintain context across multiple interactions
+- **Session Persistence**: Keep conversations alive across application restarts
 
 ## Monitoring
 

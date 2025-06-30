@@ -1,68 +1,46 @@
-import uuid
 from typing import Optional
 from services.kernel_manager import KernelManager
-from semantic_kernel.connectors.ai.open_ai import AzureChatPromptExecutionSettings
-from semantic_kernel.connectors.ai import FunctionChoiceBehavior
-from semantic_kernel.contents import ChatHistory
+from agents.ryanair_agent import RyanairAgent
 
 class ChatService:
-    """Service for handling chat completions using Azure AI."""
-    
-    # Class-level session counter for singleton pattern
-    _session_counter = 0
-    # Class-level chat history database for persistence across instances
-    _chat_history_db = {}
+    """Service for handling chat completions using the Ryanair Agent."""
 
-    def __init__(self, km: KernelManager, system_prompt: str, session_id: Optional[str] = None):
+    def __init__(self, km: KernelManager, session_id: Optional[str] = None):
         """Initialize the ChatService with a KernelManager instance."""
         self._kernel_manager = km
-        self._settings = AzureChatPromptExecutionSettings()
-        self._settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
-        
-        # Generate unique session_id if not provided
-        if session_id:
-            self._session_id = session_id
-        else:
-            ChatService._session_counter += 1
-            self._session_id = f"session_{ChatService._session_counter}"
-        
-        self._chat_history = ChatHistory()
-        self._chat_history.add_message({
-            "role": "system",
-            "content": system_prompt
-        })
-        
-        # Initialize session in class-level database if it doesn't exist
-        if self._session_id not in ChatService._chat_history_db:
-            ChatService._chat_history_db[self._session_id] = list()
+        self._agent = RyanairAgent(km, session_id)
     
     def add_message_to_history(self, role: str, content: str):
         """Add a message to the chat history."""
-
-        message = {
-            "role": role,
-            "content": content
-        }
-
-        ChatService._chat_history_db[self._session_id].append(message)
-        
-        self._chat_history.add_message(message)
+        self._agent.add_message(role, content)
 
     def get_chat_history(self) -> list[dict]:
         """Get the chat history."""
-        return ChatService._chat_history_db[self._session_id]
+        return self._agent.get_conversation_history()
     
     def get_chat_history_by_session_id(self, session_id: str) -> list[dict]:
         """Get the chat history by session id."""
-        return ChatService._chat_history_db.get(session_id, [])
+        return self._agent.get_conversation_history_by_session(session_id)
 
     async def get_chat_completion(self) -> str:
         """Get chat completion based on the provided history."""
+        # This method is kept for backward compatibility
+        # In the new agent-based approach, you should use process_query directly
+        raise NotImplementedError("Use process_query() method instead for agent-based interactions")
 
-        result = await self._kernel_manager.chat_completion.get_chat_message_content(
-            chat_history=self._chat_history,
-            kernel=self._kernel_manager._kernel,
-            settings=self._settings
-        )
-
-        return result.content
+    async def process_query(self, user_query: str) -> str:
+        """Process a user query using the Ryanair Agent."""
+        return await self._agent.process_query(user_query)
+    
+    @property
+    def session_id(self) -> str:
+        """Get the current session ID."""
+        return self._agent.session_id
+    
+    def get_agent_info(self) -> dict:
+        """Get information about the underlying agent."""
+        return self._agent.get_agent_info()
+    
+    def reset_conversation(self) -> None:
+        """Reset the conversation history."""
+        self._agent.reset_conversation()

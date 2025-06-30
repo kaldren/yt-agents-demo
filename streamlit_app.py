@@ -22,8 +22,18 @@ def main():
             st.session_state.session_id = new_session_id
             st.rerun()
         
+        st.header("Agent Controls")
         if st.button("View Chat History"):
             view_chat_history()
+        
+        if st.button("Get Agent Info"):
+            get_agent_info()
+        
+        if st.button("Reset Conversation"):
+            reset_conversation()
+        
+        if st.button("View All Sessions"):
+            view_all_sessions()
     
     # Main chat interface
     st.header("Chat")
@@ -88,6 +98,56 @@ def view_chat_history():
                 st.info("No chat history found for this session.")
         else:
             st.error(f"Error fetching history: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Connection error: {e}")
+
+def get_agent_info():
+    """Display agent information."""
+    try:
+        response = requests.get(
+            f"{FASTAPI_BASE_URL}/agent/info",
+            params={"session_id": st.session_state.session_id}
+        )
+        if response.status_code == 200:
+            agent_info = response.json()["agent_info"]
+            st.subheader("Agent Information")
+            st.json(agent_info)
+        else:
+            st.error(f"Error fetching agent info: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Connection error: {e}")
+
+def reset_conversation():
+    """Reset the conversation for current session."""
+    try:
+        response = requests.post(
+            f"{FASTAPI_BASE_URL}/agent/reset",
+            params={"session_id": st.session_state.session_id}
+        )
+        if response.status_code == 200:
+            st.success("Conversation reset successfully!")
+            # Clear local messages
+            st.session_state.messages = []
+            st.rerun()
+        else:
+            st.error(f"Error resetting conversation: {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Connection error: {e}")
+
+def view_all_sessions():
+    """Display all active sessions."""
+    try:
+        response = requests.get(f"{FASTAPI_BASE_URL}/agent/sessions")
+        if response.status_code == 200:
+            sessions = response.json()["active_sessions"]
+            if sessions:
+                st.subheader("Active Sessions")
+                for session in sessions:
+                    st.write(f"- {session}")
+            else:
+                st.info("No active sessions found.")
+        else:
+            st.error(f"Error fetching sessions: {response.status_code}")
     except requests.exceptions.RequestException as e:
         st.error(f"Connection error: {e}")
 
